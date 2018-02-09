@@ -6,7 +6,7 @@ feature complete than avro, however it's much faster.
 
 Name:       python-%{srcname}
 Version:    0.17.3
-Release:    2%{?dist}
+Release:    3%{?dist}
 Summary:    %{sum}
 
 # https://github.com/tebeka/fastavro/issues/60
@@ -111,6 +111,9 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 %doc docs/_build/html
 
 %changelog
+* Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.17.3-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
 * Mon Jan 22 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.17.3-2
 - Disable tests temporarily - fail on i686 only. Issue filed upstream.
 
