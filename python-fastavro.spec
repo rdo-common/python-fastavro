@@ -5,8 +5,8 @@ Python avro package is packed with features but dog slow. fastavro is less \
 feature complete than avro, however it's much faster.
 
 Name:       python-%{srcname}
-Version:    0.17.3
-Release:    2%{?dist}
+Version:    0.19.6
+Release:    1%{?dist}
 Summary:    %{sum}
 
 # https://github.com/tebeka/fastavro/issues/60
@@ -26,6 +26,7 @@ BuildRequires:  %{py2_dist setuptools}
 BuildRequires:  %{py2_dist Cython}
 BuildRequires:  %{py2_dist pytest}
 BuildRequires:  %{py2_dist sphinx}
+BuildRequires:  %{py2_dist numpy}
 Requires:       %{py2_dist python-snappy}
 Requires:       %{py2_dist ujson}
 
@@ -42,6 +43,7 @@ BuildRequires:  python3-devel
 BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist Cython}
 BuildRequires:  %{py3_dist pytest}
+BuildRequires:  %{py3_dist numpy}
 Requires:       %{py3_dist python-snappy}
 Requires:       %{py3_dist ujson}
 %{?python_provide:%python_provide python3-%{srcname}}
@@ -64,8 +66,8 @@ sed -i "s/Cython>=.*',/Cython',/" setup.py
 sed -i "/tests_require=/d" setup.py
 
 %build
-%py2_build
-%py3_build
+FASTAVRO_USE_CYTHON=1 %py2_build
+FASTAVRO_USE_CYTHON=1 %py3_build
 
 pushd docs
     PYTHONPATH=../ make html man
@@ -78,8 +80,8 @@ popd
 
 
 %install
-%py2_install
-%py3_install
+FASTAVRO_USE_CYTHON=1 %py2_install
+FASTAVRO_USE_CYTHON=1 %py3_install
 
 # Install man page
 install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/%{srcname}.1 || exit -1
@@ -89,7 +91,7 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 # %check
 # %{__python2} setup.py build_ext --inplace
 # PYTHONPATH=. pytest-2  tests
-#
+
 # %{__python3} setup.py build_ext --inplace
 # PYTHONPATH=. pytest-3 tests
 
@@ -111,6 +113,13 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 %doc docs/_build/html
 
 %changelog
+* Sat Jun 09 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.19.6-1
+- Update to new release
+- Tests still failing for i686 so disabling
+
+* Tue Jan 23 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.17.3-3
+- Re-enable tests for testing
+
 * Mon Jan 22 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.17.3-2
 - Disable tests temporarily - fail on i686 only. Issue filed upstream.
 
