@@ -6,7 +6,7 @@ feature complete than avro, however it's much faster.
 
 Name:       python-%{srcname}
 Version:    0.19.6
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    %{sum}
 
 # https://github.com/tebeka/fastavro/issues/60
@@ -113,6 +113,9 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 %doc docs/_build/html
 
 %changelog
+* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 0.19.6-2
+- Rebuilt for Python 3.7
+
 * Sat Jun 09 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.19.6-1
 - Update to new release
 - Tests still failing for i686 so disabling
