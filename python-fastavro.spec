@@ -5,8 +5,8 @@ Python avro package is packed with features but dog slow. fastavro is less \
 feature complete than avro, however it's much faster.
 
 Name:       python-%{srcname}
-Version:    0.19.6
-Release:    2%{?dist}
+Version:    0.19.8
+Release:    1%{?dist}
 Summary:    %{sum}
 
 # https://github.com/tebeka/fastavro/issues/60
@@ -113,6 +113,9 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 %doc docs/_build/html
 
 %changelog
+* Fri Jun 29 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.19.8-1
+- Update to 0.19.8
+
 * Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 0.19.6-2
 - Rebuilt for Python 3.7
 
