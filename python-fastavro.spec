@@ -21,6 +21,7 @@ Source0:    https://github.com/tebeka/%{srcname}/archive/%{version}/%{srcname}-%
 
 %package -n python2-%{srcname}
 Summary:        %{sum}
+BuildRequires:  gcc
 BuildRequires:  python2-devel
 BuildRequires:  %{py2_dist setuptools}
 BuildRequires:  %{py2_dist Cython}
