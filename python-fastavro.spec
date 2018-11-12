@@ -1,12 +1,24 @@
+# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
+%if 0%{?fedora} >= 30
+%bcond_with py2
+%else
+%bcond_without py2
+%endif
+
+# Fail only on i686 for some reason. Issue filed upstream:
+# https://github.com/tebeka/fastavro/issues/147
+%bcond_with tests
+
 %global srcname     fastavro
 %global sum     Fast Avro for Python
-%global _description    Apache Avro is a data serialization system. The current \
-Python avro package is packed with features but dog slow. fastavro is less \
-feature complete than avro, however it's much faster.
+%global _description %{expand: \
+Apache Avro is a data serialization system. The current Python avro package is
+packed with features but dog slow. fastavro is less feature complete than avro,
+however it is much faster.}
 
 Name:       python-%{srcname}
-Version:    0.19.8
-Release:    3%{?dist}
+Version:    0.21.13
+Release:    1%{?dist}
 Summary:    %{sum}
 
 # https://github.com/tebeka/fastavro/issues/60
@@ -14,39 +26,40 @@ Summary:    %{sum}
 # https://avro.apache.org/docs/1.8.2/api/cpp/html/ResolvingReader_8hh_source.html etc
 License:    ASL 2.0
 URL:        https://github.com/tebeka/%{srcname}
-Source0:    https://github.com/tebeka/%{srcname}/archive/%{version}/%{srcname}-%{version}.tar.gz
+Source0:    %pypi_source %{srcname}
+
+BuildRequires:  gcc
 
 %description
 %{_description}
 
+%if %{with py2}
 %package -n python2-%{srcname}
 Summary:        %{sum}
-BuildRequires:  gcc
 BuildRequires:  python2-devel
 BuildRequires:  %{py2_dist setuptools}
-BuildRequires:  %{py2_dist Cython}
+BuildRequires:  %{py2_dist Cython} >= 0.29
 BuildRequires:  %{py2_dist pytest}
-BuildRequires:  %{py2_dist sphinx}
 BuildRequires:  %{py2_dist numpy}
 Requires:       %{py2_dist python-snappy}
-Requires:       %{py2_dist ujson}
 
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
 %{_description}
-
+%endif
 
 
 %package -n python3-%{srcname}
 Summary:        %{sum}
 BuildRequires:  python3-devel
 BuildRequires:  %{py3_dist setuptools}
-BuildRequires:  %{py3_dist Cython}
+# Not available in < F30 at the moment.
+BuildRequires:  %{py3_dist Cython} >= 0.29
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist sphinx}
 Requires:       %{py3_dist python-snappy}
-Requires:       %{py3_dist ujson}
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -60,15 +73,20 @@ Documentation for %{name}.
 %prep
 %autosetup -n %{srcname}-%{version}
 rm -rf *.egg-info
-# Remove cython constraint - the marked issue has been solved in Cython
-sed -i "s/Cython>=.*',/Cython',/" setup.py
 # We don't run the flake8 and manifest check tests so we remove this from the
 # setup.py file to prevent it from trying to fetch stuff from pypi
 sed -i "/tests_require=/d" setup.py
 
+# Remove the already generated C files so we generate them ourselves
+find fastavro/ -name "*.c" -print -delete
+
 %build
-FASTAVRO_USE_CYTHON=1 %py2_build
-FASTAVRO_USE_CYTHON=1 %py3_build
+export FASTAVRO_USE_CYTHON=1
+%if %{with py2}
+%py2_build
+%endif
+
+%py3_build
 
 pushd docs
     PYTHONPATH=../ make html man
@@ -81,25 +99,33 @@ popd
 
 
 %install
-FASTAVRO_USE_CYTHON=1 %py2_install
-FASTAVRO_USE_CYTHON=1 %py3_install
+export FASTAVRO_USE_CYTHON=1
+%if %{with py2}
+%py2_install
+%endif
+
+%py3_install
 
 # Install man page
 install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/%{srcname}.1 || exit -1
 
-# Fail only on i686 for some reason. Issue filed upstream:
-# https://github.com/tebeka/fastavro/issues/147
-# %check
-# %{__python2} setup.py build_ext --inplace
-# PYTHONPATH=. pytest-2  tests
+%check
+%if %{with tests}
+%if %{with py2}
+%{__python2} setup.py build_ext --inplace
+PYTHONPATH=. pytest-2  tests
+%endif
 
-# %{__python3} setup.py build_ext --inplace
-# PYTHONPATH=. pytest-3 tests
+%{__python3} setup.py build_ext --inplace
+PYTHONPATH=. pytest-3 tests
+%endif
 
+%if %{with py2}
 %files -n python2-%{srcname}
 %license NOTICE.txt
 %{python2_sitearch}/%{srcname}-%{version}-py?.?.egg-info
 %{python2_sitearch}/%{srcname}/
+%endif
 
 %files -n python3-%{srcname}
 %license NOTICE.txt
@@ -114,6 +140,11 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 %doc docs/_build/html
 
 %changelog
+* Mon Nov 12 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.21.13-1
+- Disable py3 on F30+
+- Update to latest release
+- Use pypi source
+
 * Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.19.8-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
