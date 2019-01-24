@@ -1,8 +1,10 @@
 # https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-%if 0%{?fedora} >= 30
+%if 0%{?fedora} || 0%{?rhel} > 7
 %bcond_with py2
+%bcond_without py3
 %else
 %bcond_without py2
+%bcond_with py3
 %endif
 
 # Fail only on i686 for some reason. Issue filed upstream:
@@ -26,7 +28,7 @@ Summary:    %{sum}
 # https://avro.apache.org/docs/1.8.2/api/cpp/html/ResolvingReader_8hh_source.html etc
 License:    ASL 2.0
 URL:        https://github.com/tebeka/%{srcname}
-Source0:    %pypi_source %{srcname}
+Source0:    https://files.pythonhosted.org/packages/source/f/%{srcname}/%{srcname}-%{version}.tar.gz
 
 BuildRequires:  gcc
 
@@ -37,11 +39,11 @@ BuildRequires:  gcc
 %package -n python2-%{srcname}
 Summary:        %{sum}
 BuildRequires:  python2-devel
-BuildRequires:  %{py2_dist setuptools}
-BuildRequires:  %{py2_dist Cython} >= 0.29
-BuildRequires:  %{py2_dist pytest}
-BuildRequires:  %{py2_dist numpy}
-Requires:       %{py2_dist python-snappy}
+BuildRequires:  python2-setuptools
+BuildRequires:  python2-Cython
+BuildRequires:  pytest
+BuildRequires:  python2-numpy
+Requires:       python2-snappy
 
 %{?python_provide:%python_provide python2-%{srcname}}
 
@@ -50,6 +52,7 @@ Requires:       %{py2_dist python-snappy}
 %endif
 
 
+%if %{with py3}
 %package -n python3-%{srcname}
 Summary:        %{sum}
 BuildRequires:  python3-devel
@@ -64,9 +67,15 @@ Requires:       %{py3_dist python-snappy}
 
 %description -n python3-%{srcname}
 %{_description}
+%endif
 
 %package doc
 Summary:        %{sum}
+%if %{with py2}
+BuildRequires:  python2-sphinx
+%else
+BuildRequires:  python3-sphinx
+%endif
 %description doc
 Documentation for %{name}.
 
@@ -86,7 +95,9 @@ export FASTAVRO_USE_CYTHON=1
 %py2_build
 %endif
 
+%if %{with py3}
 %py3_build
+%endif
 
 pushd docs
     PYTHONPATH=../ make html man
@@ -104,7 +115,9 @@ export FASTAVRO_USE_CYTHON=1
 %py2_install
 %endif
 
+%if %{with py3}
 %py3_install
+%endif
 
 # Install man page
 install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man1/%{srcname}.1 || exit -1
@@ -116,8 +129,10 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 PYTHONPATH=. pytest-2  tests
 %endif
 
+%if %{with py3}
 %{__python3} setup.py build_ext --inplace
 PYTHONPATH=. pytest-3 tests
+%endif
 %endif
 
 %if %{with py2}
@@ -125,14 +140,18 @@ PYTHONPATH=. pytest-3 tests
 %license NOTICE.txt
 %{python2_sitearch}/%{srcname}-%{version}-py?.?.egg-info
 %{python2_sitearch}/%{srcname}/
+%{_bindir}/%{srcname}
+%{_mandir}/man1/%{srcname}.*
 %endif
 
+%if %{with py3}
 %files -n python3-%{srcname}
 %license NOTICE.txt
 %{python3_sitearch}/%{srcname}-%{version}-py?.?.egg-info
 %{python3_sitearch}/%{srcname}/
 %{_bindir}/%{srcname}
 %{_mandir}/man1/%{srcname}.*
+%endif
 
 %files doc
 %doc README.md
