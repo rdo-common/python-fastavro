@@ -6,7 +6,7 @@ feature complete than avro, however it's much faster.
 
 Name:       python-%{srcname}
 Version:    0.19.8
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    %{sum}
 
 # https://github.com/tebeka/fastavro/issues/60
@@ -18,23 +18,6 @@ Source0:    https://github.com/tebeka/%{srcname}/archive/%{version}/%{srcname}-%
 
 %description
 %{_description}
-
-%package -n python2-%{srcname}
-Summary:        %{sum}
-BuildRequires:  python2-devel
-BuildRequires:  %{py2_dist setuptools}
-BuildRequires:  %{py2_dist Cython}
-BuildRequires:  %{py2_dist pytest}
-BuildRequires:  %{py2_dist sphinx}
-BuildRequires:  %{py2_dist numpy}
-Requires:       %{py2_dist python-snappy}
-Requires:       %{py2_dist ujson}
-
-%{?python_provide:%python_provide python2-%{srcname}}
-
-%description -n python2-%{srcname}
-%{_description}
-
 
 
 %package -n python3-%{srcname}
@@ -53,6 +36,8 @@ Requires:       %{py3_dist ujson}
 
 %package doc
 Summary:        %{sum}
+BuildRequires:  python3-sphinx
+BuildRequires:  python3-sphinx_rtd_theme
 %description doc
 Documentation for %{name}.
 
@@ -66,21 +51,18 @@ sed -i "s/Cython>=.*',/Cython',/" setup.py
 sed -i "/tests_require=/d" setup.py
 
 %build
-FASTAVRO_USE_CYTHON=1 %py2_build
 FASTAVRO_USE_CYTHON=1 %py3_build
 
-pushd docs
-    PYTHONPATH=../ make html man
-    pushd _build/html
-        rm .buildinfo -f || exit -1
-        sed -i 's/\r$//' objects.inv
-        iconv -f iso8859-1 -t utf-8 objects.inv > objects.inv.conv && mv -fv objects.inv.conv objects.inv
-    popd
+sphinx-build-3 -b html docs/ docs/_build/html
+sphinx-build-3 -b man docs/ docs/_build/man
+pushd docs/_build/html
+rm .buildinfo -f || exit -1
+sed -i 's/\r$//' objects.inv
+iconv -f iso8859-1 -t utf-8 objects.inv > objects.inv.conv && mv -fv objects.inv.conv objects.inv
 popd
 
 
 %install
-FASTAVRO_USE_CYTHON=1 %py2_install
 FASTAVRO_USE_CYTHON=1 %py3_install
 
 # Install man page
@@ -88,17 +70,12 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 
 # Fail only on i686 for some reason. Issue filed upstream:
 # https://github.com/tebeka/fastavro/issues/147
-# %check
+%check
 # %{__python2} setup.py build_ext --inplace
 # PYTHONPATH=. pytest-2  tests
 
-# %{__python3} setup.py build_ext --inplace
-# PYTHONPATH=. pytest-3 tests
-
-%files -n python2-%{srcname}
-%license NOTICE.txt
-%{python2_sitearch}/%{srcname}-%{version}-py?.?.egg-info
-%{python2_sitearch}/%{srcname}/
+%{__python3} setup.py build_ext --inplace
+PYTHONPATH=. pytest-3 tests
 
 %files -n python3-%{srcname}
 %license NOTICE.txt
@@ -113,6 +90,9 @@ install -v -p -D -m 0644 docs/_build/man/%{srcname}.1 %{buildroot}%{_mandir}/man
 %doc docs/_build/html
 
 %changelog
+* Thu Feb 13 2020 Alfredo Moralejo <amoralej@redhat.com> - 0.19.8-2
+- Adjust for CentOS8
+
 * Fri Jun 29 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.19.8-1
 - Update to 0.19.8
 
